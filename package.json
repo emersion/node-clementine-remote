@@ -1,0 +1,29 @@
+{
+  "name": "clementine-remote",
+  "version": "0.1.0",
+  "description": "A Node.js library for Clementine remote protocol",
+  "main": "index.js",
+  "scripts": {
+    "test": " "
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/emersion/node-clementine-remote.git"
+  },
+  "keywords": [
+    "clementine",
+    "remote",
+    "music",
+    "player",
+    "protocol"
+  ],
+  "author": "emersion",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/emersion/node-clementine-remote/issues"
+  },
+  "homepage": "https://github.com/emersion/node-clementine-remote",
+  "dependencies": {
+    "protobufjs": "^3.8.2"
+  }
+}
