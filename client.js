@@ -123,7 +123,6 @@ ClementineClient.prototype.write = function (msgData) {
 	bufferHeader.writeUInt32BE(bufferData.length, 0);
 
 	var buf = Buffer.concat([bufferHeader, bufferData]);
-	console.log('sending', buf.length, buf);
 	this.socket.write(buf);
 };
 
@@ -148,4 +147,4 @@ ClementineClient.prototype.end = function () {
 	return that.disconnect();
 };
 
-exports.Client = ClementineClient;
+module.exports = ClementineClient;
