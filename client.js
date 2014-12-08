@@ -19,7 +19,7 @@ function ClementineClient(opts) {
 
 	this.socket.on('connect', function () {
 		var req = {
-			send_playlist_songs: false,
+			send_playlist_songs: true,
 			downloader: false
 		};
 		if (typeof opts.auth_code == 'number') {
@@ -27,6 +27,7 @@ function ClementineClient(opts) {
 		}
 		that.write({
 			type: 'CONNECT',
+			version: 12,
 			request_connect: req
 		});
 
@@ -34,23 +35,11 @@ function ClementineClient(opts) {
 	});
 
 	this.socket.on('data', function (buf) {
-		// TODO: veryyyy buggy
-		var len = buf.readUInt32BE(0);
-		var msg;
-		try {
-			msg = Message.decode(buf.slice(buf.length - len));
-		} catch (e) {
-			console.log('msg len:', len, 'buf:', buf.length, 'offset:', buf.length - len);
-			console.log('WARN: could not decode, trying to guess offset');
-			for (var i = 0; i < buf.length; i++) {
-				try {
-					msg = Message.decode(buf.slice(i));
-				} catch (e) {
-					continue;
-				}
-				break;
-			}
-			console.log('WARN: Found offset', i);
+		// TODO: data buffering
+		var msg = proto.decode(buf);
+		if (!msg) {
+			console.log('WARN: could not decode data');
+			return;
 		}
 
 		if (msg.repeat) {
@@ -103,7 +92,6 @@ function ClementineClient(opts) {
 			case MsgType.STOP:
 			case MsgType.NEXT:
 			case MsgType.PREVIOUS:
-				console.log(msg.type, proto.getMsgTypeName(msg.type).toLowerCase());
 				that.emit(proto.getMsgTypeName(msg.type).toLowerCase());
 				break;
 			default:
@@ -119,19 +107,7 @@ function ClementineClient(opts) {
 util.inherits(ClementineClient, stream.Duplex);
 
 ClementineClient.prototype.write = function (msgData) {
-	var msg = new Message(msgData);
-	var bufferData = msg.encode().toBuffer();
-
-	var bufferHeader = new Buffer(4);
-	bufferHeader.writeUInt32BE(bufferData.length, 0);
-
-	var buf = Buffer.concat([bufferHeader, bufferData]);
-	this.socket.write(buf);
-};
-
-ClementineClient.prototype.prompt = function (msgData, resType, callback) {
-	this.write(msgData);
-	this.once(resType, callback);
+	this.socket.write(proto.encode(msgData));
 };
 
 var actions = ['play', 'playpause', 'pause', 'stop', 'next', 'previous', 'shuffle_playlist', 'disconnect'];

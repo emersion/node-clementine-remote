@@ -15,7 +15,7 @@ client.on('ready', function () {
 		console.log('Now playing', song.title);
 	});
 
-	client.play();
+	//client.play();
 });
 client.on('disconnect', function (data) {
 	console.log('client disconnecting', data);
