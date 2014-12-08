@@ -1,4 +1,3 @@
-var fs = require('fs');
 var net = require('net');
 var stream = require('stream');
 var util = require('util');
