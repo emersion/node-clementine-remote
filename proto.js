@@ -1,5 +1,5 @@
 var protobuf = require('protobufjs');
-var builder = protobuf.loadProtoFile('remotecontrolmessages.proto');
+var builder = protobuf.loadProtoFile(__dirname+'/remotecontrolmessages.proto');
 
 var ns = 'pb.remote';
 function build(type) {
@@ -17,8 +17,8 @@ var proto = {
 };
 
 proto.getMsgTypeName = function (typeIndex) {
-	for (var name in exports.MsgType) {
-		if (exports.MsgType[name] === typeIndex) {
+	for (var name in proto.MsgType) {
+		if (proto.MsgType[name] === typeIndex) {
 			return name;
 		}
 	}

@@ -19,13 +19,16 @@ function ClementineClient(opts) {
 	});
 
 	this.socket.on('connect', function () {
+		var req = {
+			send_playlist_songs: false,
+			downloader: false
+		};
+		if (typeof opts.auth_code == 'number') {
+			req.auth_code = opts.auth_code;
+		}
 		that.write({
 			type: 'CONNECT',
-			request_connect: {
-				auth_code: opts.auth_code || undefined,
-				send_playlist_songs: false,
-				downloader: false
-			}
+			request_connect: req
 		});
 
 		that.emit('connect');
@@ -101,6 +104,7 @@ function ClementineClient(opts) {
 			case MsgType.STOP:
 			case MsgType.NEXT:
 			case MsgType.PREVIOUS:
+				console.log(msg.type, proto.getMsgTypeName(msg.type).toLowerCase());
 				that.emit(proto.getMsgTypeName(msg.type).toLowerCase());
 				break;
 			default:
@@ -131,7 +135,7 @@ ClementineClient.prototype.prompt = function (msgData, resType, callback) {
 	this.once(resType, callback);
 };
 
-var actions = ['play', 'playpause', 'pause', 'stop', 'next', 'previous', 'shuffle_playlist'];
+var actions = ['play', 'playpause', 'pause', 'stop', 'next', 'previous', 'shuffle_playlist', 'disconnect'];
 function setAction(name) {
 	ClementineClient.prototype[name] = function () {
 		this.write({
@@ -144,7 +148,7 @@ for (var i = 0; i < actions.length; i++) {
 }
 
 ClementineClient.prototype.end = function () {
-	return that.disconnect();
+	return this.disconnect();
 };
 
 module.exports = ClementineClient;
