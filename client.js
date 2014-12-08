@@ -54,10 +54,6 @@ function ClementineClient(opts) {
 			console.log('WARN: Found offset', i);
 		}
 
-		if (msg.request_set_volume) {
-			that.volume = msg.request_set_volume.volume;
-			that.emit('volume', that.volume);
-		}
 		if (msg.repeat) {
 			that.repeat = msg.repeat;
 			that.emit('repeat', that.repeat);
@@ -76,6 +72,10 @@ function ClementineClient(opts) {
 		switch (msg.type) {
 			case MsgType.DISCONNECT:
 				that.emit('disconnect', msg.response_disconnect);
+				break;
+			case MsgType.SET_VOLUME:
+				that.volume = msg.request_set_volume.volume;
+				that.emit('volume', that.volume);
 				break;
 			case MsgType.KEEP_ALIVE:
 				that.emit('alive');
