@@ -1,23 +1,23 @@
 var net = require('net');
-var stream = require('stream');
 var util = require('util');
 
 var proto = require('./proto');
 var Message = proto.Message,
 	MsgType = proto.MsgType;
+var Connection = require('./connection');
 
-function ClementineClient(opts) {
-	if (!(this instanceof ClementineClient)) return new ClementineClient(opts);
-	stream.Duplex.call(this);
+function Client(opts) {
+	if (!(this instanceof Client)) return new Client(opts);
 
-	var that = this;
-
-	this.socket = net.connect({
+	var socket = net.connect({
 		host: opts.host,
 		port: opts.port
 	});
+	Connection.call(this, socket);
 
-	this.socket.on('connect', function () {
+	var that = this;
+
+	socket.on('connect', function () {
 		var req = {
 			send_playlist_songs: true,
 			downloader: false
@@ -27,21 +27,13 @@ function ClementineClient(opts) {
 		}
 		that.write({
 			type: 'CONNECT',
-			version: 12,
 			request_connect: req
 		});
 
 		that.emit('connect');
 	});
 
-	this.socket.on('data', function (buf) {
-		// TODO: data buffering
-		var msg = proto.decode(buf);
-		if (!msg) {
-			console.log('WARN: could not decode data');
-			return;
-		}
-
+	this.on('message', function (msg) {
 		if (msg.repeat) {
 			that.repeat = msg.repeat;
 			that.emit('repeat', that.repeat);
@@ -54,8 +46,6 @@ function ClementineClient(opts) {
 			that.playlist = msg.response_playlists.playlist;
 			that.emit('playlist', that.playlist);
 		}
-
-		that.emit('message', msg);
 
 		switch (msg.type) {
 			case MsgType.DISCONNECT:
@@ -99,20 +89,12 @@ function ClementineClient(opts) {
 				that.emit(proto.getMsgTypeName(msg.type).toLowerCase(), msg);
 		}
 	});
-
-	this.socket.on('end', function () {
-		that.emit('end');
-	});
 }
-util.inherits(ClementineClient, stream.Duplex);
-
-ClementineClient.prototype.write = function (msgData) {
-	this.socket.write(proto.encode(msgData));
-};
+util.inherits(Client, Connection);
 
 var actions = ['play', 'playpause', 'pause', 'stop', 'next', 'previous', 'shuffle_playlist', 'disconnect'];
 function setAction(name) {
-	ClementineClient.prototype[name] = function () {
+	Client.prototype[name] = function () {
 		this.write({
 			type: name.toUpperCase()
 		});
@@ -122,8 +104,8 @@ for (var i = 0; i < actions.length; i++) {
 	setAction(actions[i]);
 }
 
-ClementineClient.prototype.end = function () {
+Client.prototype.end = function () {
 	return this.disconnect();
 };
 
-module.exports = ClementineClient;
+module.exports = Client;

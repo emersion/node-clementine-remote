@@ -6,47 +6,19 @@ var util = require('util');
 var proto = require('./proto');
 var Message = proto.Message,
 	MsgType = proto.MsgType;
+var Connection = require('./connection');
 
-function Connection(socket, server) {
-	if (!(this instanceof Connection)) return new Connection(socket, server);
-	stream.Duplex.call(this);
+function ServerConnection(socket, server) {
+	if (!(this instanceof ServerConnection)) return new ServerConnection(socket, server);
+	Connection.call(this, socket);
 
 	var that = this;
 
-	this.socket = socket;
 	this.server = server;
 
 	this.accepted = false;
 
-	var buf;
-	socket.on('data', function (data) {
-		// TODO: better buffering
-		if (buf) {
-			data = Buffer.concat([buf || new Buffer(), data]);
-		}
-		var len = data.readUInt32BE(0);
-
-		// Receiving more than 128mb is very unlikely
-		if (len > 134217728) {
-			console.warn('WARN: invalid message length, too big', len, data.length, data);
-			that.end();
-			return;
-		}
-		if (len > data.length) { // We didn't get everything
-			buf = data;
-			return;
-		}
-		buf = null;
-
-		var msg = proto.decode(data);
-		if (!msg) {
-			console.log('WARN: could not decode data');
-			return;
-		}
-
-		that.emit('message', msg);
-		//console.log(msg);
-
+	this.on('message', function (msg) {
 		if (msg.type === MsgType.UNKNOWN) {
 			console.warn('WARN: unknown message type');
 			return;
@@ -112,31 +84,38 @@ function Connection(socket, server) {
 		}
 	});
 
-	socket.on('end', function () {
+	this.keepAliveInterval = setInterval(function () {
+		that.write({
+			type: 'KEEP_ALIVE'
+		});
+	}, server.options.keepAliveInterval * 1000);
+
+	this.on('end', function () {
+		clearInterval(that.keepAliveInterval);
 		console.log('client disconnected');
-		that.emit('end');
 	});
-
-	// TODO: send KEEP_ALIVE
 }
-util.inherits(Connection, stream.Duplex);
+util.inherits(ServerConnection, Connection);
 
-Connection.prototype.write = function (msgData) {
+ServerConnection.prototype.write = function (msg) {
 	if (this.version && this.version <= 12) {
-		msgData.version = 13;
+		msg.version = 13;
 	}
 
-	this.socket.write(proto.encode(msgData));
+	Connection.prototype.write.call(this, msg);
 };
 
-Connection.prototype.end = function () {
+ServerConnection.prototype.end = function () {
 	console.log('disconnecting client');
-	this.socket.end();
+	Connection.prototype.end.call(this);
 };
 
 function Server(opts) {
 	if (!(this instanceof Server)) return new Server(opts);
 	events.EventEmitter.call(this);
+
+	opts.port = opts.port || 5500;
+	opts.keepAliveInterval = opts.keepAliveInterval || 10;
 
 	this.options = opts;
 	this.conns = [];
@@ -149,7 +128,7 @@ function Server(opts) {
 	var server = net.createServer(function (socket) {
 		console.log('client connected');
 
-		var conn = Connection(socket, that);
+		var conn = ServerConnection(socket, that);
 		that.conns.push(conn);
 
 		conn.on('end', function () {
@@ -161,7 +140,7 @@ function Server(opts) {
 
 		that.emit('connection', conn);
 	});
-	server.listen(opts.port || 5500, function () {
+	server.listen(opts.port, function () {
 		console.log('Server listening', server.address());
 
 		that.emit('listening');
