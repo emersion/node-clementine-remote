@@ -1,2 +1,2 @@
-exports.Client = require('./client');
-exports.Server = require('./server');
+exports.Client = require('./lib/client');
+exports.Server = require('./lib/server');
