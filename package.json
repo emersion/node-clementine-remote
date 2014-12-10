@@ -1,6 +1,6 @@
 {
   "name": "clementine-remote",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "A Node.js library for Clementine remote protocol",
   "main": "index.js",
   "scripts": {},
