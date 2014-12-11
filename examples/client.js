@@ -1,4 +1,7 @@
 var ClementineClient = require('..').Client;
+var sqlite3 = require('sqlite3');
+var tmp = require('tmp');
+var fs = require('fs');
 
 var client = ClementineClient({
 	host: '127.0.0.1',
@@ -14,6 +17,17 @@ client.on('ready', function () {
 	client.on('song', function (song) {
 		console.log('Now playing', song.title);
 	});
+
+	var chunks = null, chunksSize = 0;
+	client.on('library', function (library) {
+		var query = 'SELECT ROWID as _id, artist, album, title, cast(filename as TEXT) as filename FROM songs';
+		library.db.serialize(function () {
+			library.db.each(query, function(err, row) {
+				console.log(row);
+			});
+		});
+	});
+	client.get_library();
 
 	//client.play();
 });
