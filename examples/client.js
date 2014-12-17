@@ -1,6 +1,4 @@
 var ClementineClient = require('..').Client;
-var tmp = require('tmp');
-var fs = require('fs');
 
 var client = ClementineClient({
 	host: '127.0.0.1',
