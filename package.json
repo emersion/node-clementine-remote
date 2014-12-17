@@ -25,5 +25,11 @@
     "protobufjs": "^3.8.2",
     "sqlite3": "^3.0.4",
     "tmp": "0.0.24"
+  },
+  "devDependencies": {
+    "brfs": "^1.2.0"
+  },
+  "browserify": {
+    "transform": ["brfs"]
   }
 }
