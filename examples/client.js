@@ -1,5 +1,4 @@
 var ClementineClient = require('..').Client;
-var sqlite3 = require('sqlite3');
 var tmp = require('tmp');
 var fs = require('fs');
 
