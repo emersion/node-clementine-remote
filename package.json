@@ -31,5 +31,9 @@
   },
   "browserify": {
     "transform": ["brfs"]
+  },
+  "browser": {
+    "net": "net-browserify",
+    "./lib/library.js": "./lib/browser/library.js"
   }
 }
