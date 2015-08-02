@@ -29,8 +29,13 @@
   "devDependencies": {
     "brfs": "^1.2.0"
   },
+  "optionalDependencies": {
+    "mdns": "^2.2.9"
+  },
   "browserify": {
-    "transform": ["brfs"]
+    "transform": [
+      "brfs"
+    ]
   },
   "browser": {
     "net": "net-browserify",
