@@ -8,3 +8,5 @@ var server = ClementineServer({
 server.on('playpause', function () {
 	console.log('playpause');
 });
+
+server.listen();
